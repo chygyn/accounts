@@ -7,6 +7,7 @@ import awesome.account.app.accounts.repository.Account
 import awesome.account.app.accounts.repository.AccountRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.*
 
 interface AccountService {
     fun addMoney(accountId: Long, amount: Long): Account
@@ -28,6 +29,10 @@ class AccountServiceImpl(
 
     @Transactional
     override fun sendMoney(senderId: Long, receiverId: Long, amount: Long): Account {
+        if (Objects.equals(receiverId,senderId)) {
+            logger.error { "Cannot transfer funds from the same account" }
+            throw ProcessException(fault = ErrorCode.TRANSFER_SAME_ACCOUNT.error)
+        }
         logger.info { "Send amount $amount from account $senderId to $receiverId" }
         checkAmount(amount)
         var sender = findAccountWithLock(senderId)
